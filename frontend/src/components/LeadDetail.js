@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 const LeadDetail = ({ lead, fetchLeads, onClose, user }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -16,20 +18,16 @@ const LeadDetail = ({ lead, fetchLeads, onClose, user }) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
 
-  const handleSaveEdit = async () => {
-    try {
-      await axios.put(`http://localhost:5000/api/leads/${lead._id}`, editData);
-      setIsEditing(false);
-      fetchLeads();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+ const handleSaveEdit = async () => {
+  try {
+    await axios.put(`${BACKEND_URL}/api/leads/${lead._id}`, editData);
+    setIsEditing(false);
+  } catch (err) { console.error(err); }
+};
 
   const handleStatusChange = async (newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/leads/${lead._id}`, { status: newStatus });
-      fetchLeads();
+      await axios.put(`${BACKEND_URL}/api/leads/${lead._id}`, { status: newStatus });
     } catch (err) {
       console.error(err);
     }
@@ -38,9 +36,8 @@ const LeadDetail = ({ lead, fetchLeads, onClose, user }) => {
   const handleAddNote = async () => {
     if (!note.trim()) return;
     try {
-      await axios.post(`http://localhost:5000/api/leads/${lead._id}/notes`, { text: note });
+      await axios.post(`${BACKEND_URL}/api/leads/${lead._id}/notes`, { text: note });
       setNote('');
-      fetchLeads();
     } catch (err) {
       console.error(err);
     }
@@ -51,7 +48,7 @@ const LeadDetail = ({ lead, fetchLeads, onClose, user }) => {
       <div className="detail-header">
         <h2>{lead.name}</h2>
         <div className="detail-actions">
-          {(user?.role === 'admin' || lead.userId?._id === user?.id) && (
+          {(user?.role === 'admin' || lead.userId?._id?.toString() === user?.id?.toString()) && (
             <button onClick={() => setIsEditing(!isEditing)} className="btn-edit">
               {isEditing ? 'Cancel' : 'Edit'}
             </button>
@@ -117,7 +114,7 @@ const LeadDetail = ({ lead, fetchLeads, onClose, user }) => {
             <select
               value={lead.status}
               onChange={(e) => handleStatusChange(e.target.value)}
-              disabled={!(user?.role === 'admin' || lead.userId?._id === user?.id)}
+              disabled={!(user?.role === 'admin' || lead.userId?._id?.toString() === user?.id?.toString())}
             >
               <option value="new">New</option>
               <option value="contacted">Contacted</option>
@@ -142,7 +139,7 @@ const LeadDetail = ({ lead, fetchLeads, onClose, user }) => {
             </li>
           ))}
         </ul>
-        {(user?.role === 'admin' || lead.userId?._id === user?.id) && (
+        {(user?.role === 'admin' || lead.userId?._id?.toString() === user?.id?.toString()) && (
           <div className="add-note">
             <textarea
               value={note}

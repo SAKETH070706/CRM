@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const AddLead = ({ fetchLeads, onClose }) => {
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
+const AddLead = ({ onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,11 +24,11 @@ const AddLead = ({ fetchLeads, onClose }) => {
     setSuccess('');
 
     try {
-      await axios.post('http://localhost:5000/api/leads', formData);
-      setSuccess('Lead added successfully!');
-      setFormData({ name: '', email: '', phone: '', source: 'Website' });
-      fetchLeads();
-      setTimeout(onClose, 1500);
+      await axios.post(`${BACKEND_URL}/api/leads`, formData);
+setSuccess('Lead added successfully!');
+setFormData({ name: '', email: '', phone: '', source: 'Website' });
+
+setTimeout(onClose, 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to add lead');
     }

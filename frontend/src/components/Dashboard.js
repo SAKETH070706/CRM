@@ -13,46 +13,31 @@ const Dashboard = ({ leads, user, onLogout, fetchLeads }) => {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    fetchLeads({ search: searchTerm, status: statusFilter, source: sourceFilter, page: currentPage });
-  }, [searchTerm, statusFilter, sourceFilter, currentPage]);
+    fetchLeads(
+      { search: searchTerm, status: statusFilter, source: sourceFilter, page: currentPage },
+      setTotalPages  // pass setter so fetchLeads can update pagination
+    );
+  }, [searchTerm, statusFilter, sourceFilter, currentPage, fetchLeads]);
 
-  // Update selectedLead when leads change
+  // Sync selectedLead when the leads array updates via socket
   useEffect(() => {
-    if (selectedLead && leads.length > 0) {
-      const updatedLead = leads.find(lead => lead._id === selectedLead._id);
-      if (updatedLead) {
-        setSelectedLead(updatedLead);
-      }
+    if (!selectedLead) return;
+    const updatedLead = leads.find((lead) => lead._id === selectedLead._id);
+    if (updatedLead && updatedLead !== selectedLead) {
+      setSelectedLead(updatedLead);
     }
-  }, [leads]);
+  }, [leads, selectedLead]);
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleStatusFilter = (e) => {
-    setStatusFilter(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleSourceFilter = (e) => {
-    setSourceFilter(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+  const handleSearch = (e)       => { setSearchTerm(e.target.value); setCurrentPage(1); };
+  const handleStatusFilter = (e) => { setStatusFilter(e.target.value); setCurrentPage(1); };
+  const handleSourceFilter = (e) => { setSourceFilter(e.target.value); setCurrentPage(1); };
 
   return (
     <div className="dashboard">
       <header>
         <div className="header-left">
           <h1>CRM Dashboard</h1>
-          <div className="user-info">
-            Welcome, {user?.name} ({user?.role})
-          </div>
+          <div className="user-info">Welcome, {user?.name} ({user?.role})</div>
         </div>
         <div className="header-right">
           <button onClick={() => setShowAddLead(true)} className="btn-add-lead">+ Add Lead</button>
@@ -62,12 +47,7 @@ const Dashboard = ({ leads, user, onLogout, fetchLeads }) => {
 
       <div className="filters">
         <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search leads..."
-            value={searchTerm}
-            onChange={handleSearch}
-          />
+          <input type="text" placeholder="Search leads..." value={searchTerm} onChange={handleSearch} />
         </div>
         <div className="filter-selects">
           <select value={statusFilter} onChange={handleStatusFilter}>
@@ -100,23 +80,15 @@ const Dashboard = ({ leads, user, onLogout, fetchLeads }) => {
 
       {totalPages > 1 && (
         <div className="pagination">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
+          <button onClick={() => setCurrentPage((p) => p - 1)} disabled={currentPage === 1}>Previous</button>
           <span>Page {currentPage} of {totalPages}</span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
+          <button onClick={() => setCurrentPage((p) => p + 1)} disabled={currentPage === totalPages}>Next</button>
         </div>
       )}
 
-      {showAddLead && <AddLead fetchLeads={fetchLeads} onClose={() => setShowAddLead(false)} />}
+      {showAddLead && (
+        <AddLead fetchLeads={fetchLeads} onClose={() => setShowAddLead(false)} />
+      )}
     </div>
   );
 };
